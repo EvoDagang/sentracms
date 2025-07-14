@@ -56,6 +56,43 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
         details: error.details,
         hint: error.hint
       });
+      return null;
+    }
+
+    console.log('[fetchUserProfile] Profile data received:', data);
+    
+    if (!data) {
+      console.warn('[fetchUserProfile] No profile data returned from query');
+      return null;
+    }
+    
+    console.log('[fetchUserProfile] Processing profile data...');
+    return {
+      id: data.id,
+      email: data.email || '',
+      name: data.name,
+      role: data.role,
+      clientId: data.client_id,
+      permissions: data.permissions || ['all']
+    };
+  } catch (error) {
+    console.error('[fetchUserProfile] Catch block error:', error);
+    console.error('[fetchUserProfile] Error type:', typeof error);
+    console.error('[fetchUserProfile] Error constructor:', error?.constructor?.name);
+    return null;
+  }
+    
+    const endTime = Date.now();
+    console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
+
+    if (error) {
+      console.error('[fetchUserProfile] Error fetching user profile:', error);
+      console.error('[fetchUserProfile] Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       console.error('[fetchUserProfile] Error fetching user profile:', error);
       console.error('[fetchUserProfile] Error details:', {
         message: error.message,
