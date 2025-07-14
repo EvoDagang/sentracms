@@ -414,18 +414,10 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
   // Show Add On Services Modal
   if (showAddOnServices) {
     return (
-      <div className="fixed inset-0 w-full h-full bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+      <div className="fixed inset-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto">
           <div className="flex items-center justify-between p-6 border-b border-slate-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Plus className="w-6 h-6 text-blue-600" />
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold text-slate-900">Add On Service</h2>
-                <p className="text-sm text-slate-600">Choose additional services to enhance your experience</p>
-              </div>
-            </div>
+            <h2 className="text-2xl font-bold text-slate-900">Add On Service</h2>
             <button
               onClick={() => setShowAddOnServices(false)}
               className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
@@ -434,36 +426,31 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {addOnServices.map((service) => (
-              <div key={service.id} className={`bg-gradient-to-r ${service.bgColor} rounded-xl p-6 border ${service.borderColor} hover:shadow-md transition-all duration-200`}>
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm">
+              <div key={service.id} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-all duration-200">
+                <div className="text-center mb-6">
+                  <div className="flex items-center justify-center mb-4">
+                    <div className={`w-16 h-16 bg-gradient-to-r ${service.bgColor} rounded-xl flex items-center justify-center shadow-sm border ${service.borderColor}`}>
                       {service.icon}
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-slate-900 leading-tight">
-                        {service.title}
-                      </h3>
-                      <div className="flex items-baseline space-x-2 mt-1">
-                        <span className="text-2xl font-bold text-slate-900">{service.price}</span>
-                        <span className="text-sm text-slate-600">{service.period}</span>
-                      </div>
-                    </div>
                   </div>
-                  <button className="bg-white text-slate-900 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">
-                    Select
-                  </button>
+                  <h3 className="text-lg font-bold text-slate-900 leading-tight mb-3">
+                    {service.title}
+                  </h3>
+                  <div className="flex items-baseline justify-center space-x-2 mb-4">
+                    <span className="text-3xl font-bold text-slate-900">{service.price}</span>
+                    <span className="text-sm text-slate-600">{service.period}</span>
+                  </div>
                 </div>
 
-                <div className="bg-white rounded-lg p-4 border border-white/50">
+                <div className="bg-slate-50 rounded-lg p-4 mb-6">
                   <h4 className="font-semibold text-slate-900 mb-3">Apa Yang Anda Akan Dapat :</h4>
                   <ul className="space-y-2">
                     {service.features.map((feature, index) => (
                       <li key={index} className="flex items-start space-x-3">
-                        <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                          <CheckCircle className="w-3 h-3 text-green-600" />
+                        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
+                          <CheckCircle className="w-4 h-4 text-green-600" />
                         </div>
                         <span className="text-sm text-slate-700 leading-relaxed">
                           {index + 1}) {feature}
@@ -472,11 +459,17 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
                     ))}
                   </ul>
                 </div>
+                
+                <div className="text-center">
+                  <button className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">
+                    Select Service
+                  </button>
+                </div>
               </div>
             ))}
           </div>
 
-          <div className="p-6 border-t border-slate-200 bg-slate-50">
+          <div className="p-6 border-t border-slate-200">
             <div className="flex flex-col sm:flex-row items-center justify-between space-y-3 sm:space-y-0">
               <div className="text-center sm:text-left">
                 <p className="text-sm text-slate-600">Need help choosing the right service?</p>
