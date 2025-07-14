@@ -35,6 +35,7 @@ interface SupabaseProviderProps {
 // Helper function to fetch user profile
 const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
   try {
+    console.log('[fetchUserProfile] Starting profile fetch for user ID:', userId);
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
@@ -42,10 +43,11 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
       .single();
 
     if (error) {
-      console.error('Error fetching user profile:', error);
+      console.error('[fetchUserProfile] Error fetching user profile:', error);
       return null;
     }
 
+    console.log('[fetchUserProfile] Profile data received:', data);
     return {
       id: data.id,
       email: data.email || '',
@@ -55,7 +57,7 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
       permissions: data.permissions || ['all']
     };
   } catch (error) {
-    console.error('Error in fetchUserProfile:', error);
+    console.error('[fetchUserProfile] Catch block error:', error);
     return null;
   }
 };
@@ -67,18 +69,27 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
   useEffect(() => {
     // Get initial session and user profile
     const initializeAuth = async () => {
+      console.log('[SupabaseContext] Starting authentication initialization at:', new Date().toISOString());
       try {
+        console.log('[SupabaseContext] Fetching initial session...');
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('[SupabaseContext] Session fetched:', session ? 'Session exists' : 'No session');
         
         if (session?.user) {
+          console.log('[SupabaseContext] User found in session, fetching profile for user ID:', session.user.id);
           const profile = await fetchUserProfile(session.user.id);
+          console.log('[SupabaseContext] Profile fetch result:', profile ? 'Profile found' : 'No profile');
           if (profile) {
             setUser({ ...profile, email: session.user.email || profile.email });
+            console.log('[SupabaseContext] User set successfully:', profile.email);
           }
+        } else {
+          console.log('[SupabaseContext] No user in session');
         }
       } catch (error) {
-        console.error('Error initializing auth:', error);
+        console.error('[SupabaseContext] Error initializing auth:', error);
       }
+      console.log('[SupabaseContext] Setting loading to false at:', new Date().toISOString());
       setLoading(false);
     };
 
@@ -87,16 +98,23 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('[SupabaseContext] Auth state change event:', event, 'at:', new Date().toISOString());
         if (event === 'SIGNED_IN' && session?.user) {
+          console.log('[SupabaseContext] SIGNED_IN event, fetching profile for user:', session.user.id);
           const profile = await fetchUserProfile(session.user.id);
+          console.log('[SupabaseContext] Profile fetch result for SIGNED_IN:', profile ? 'Profile found' : 'No profile');
           if (profile) {
             setUser({ ...profile, email: session.user.email || profile.email });
+            console.log('[SupabaseContext] User set for SIGNED_IN:', profile.email);
           }
         } else if (event === 'SIGNED_OUT') {
+          console.log('[SupabaseContext] SIGNED_OUT event');
           setUser(null);
         } else {
+          console.log('[SupabaseContext] Other auth event, clearing user');
           setUser(null);
         }
+        console.log('[SupabaseContext] Auth state change complete, setting loading to false');
         setLoading(false);
       }
     );
