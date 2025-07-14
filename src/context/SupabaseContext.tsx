@@ -39,17 +39,11 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.log('[fetchUserProfile] About to execute Supabase query...');
     
     const startTime = Date.now();
-    console.log('[fetchUserProfile] About to execute Supabase query...');
-    
-    const startTime = Date.now();
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
-    
-    const endTime = Date.now();
-    console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
     
     const endTime = Date.now();
     console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
