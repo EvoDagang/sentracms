@@ -594,7 +594,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
               </div>
             </div>
           </div>
-        </div>
+
           {/* Add On Service */}
           <div 
             className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
@@ -612,7 +612,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
               </div>
             </div>
           </div>
-
+        </div>
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Need Help */}
