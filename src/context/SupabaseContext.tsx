@@ -73,8 +73,6 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
         if (session?.user) {
           const profile = await fetchUserProfile(session.user.id);
           if (profile) {
-            // Update last login
-            await supabase.rpc('update_last_login', { user_id: session.user.id });
             setUser({ ...profile, email: session.user.email || profile.email });
           }
         }
@@ -92,8 +90,6 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
         if (event === 'SIGNED_IN' && session?.user) {
           const profile = await fetchUserProfile(session.user.id);
           if (profile) {
-            // Update last login
-            await supabase.rpc('update_last_login', { user_id: session.user.id });
             setUser({ ...profile, email: session.user.email || profile.email });
           }
         } else if (event === 'SIGNED_OUT') {
