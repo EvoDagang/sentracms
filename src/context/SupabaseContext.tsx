@@ -39,11 +39,17 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.log('[fetchUserProfile] About to execute Supabase query...');
     
     const startTime = Date.now();
+    console.log('[fetchUserProfile] About to execute Supabase query...');
+    
+    const startTime = Date.now();
     const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
+    
+    const endTime = Date.now();
+    console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
     
     const endTime = Date.now();
     console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
@@ -56,16 +62,27 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
         details: error.details,
         hint: error.hint
       });
+      console.error('[fetchUserProfile] Error fetching user profile:', error);
+      console.error('[fetchUserProfile] Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       return null;
     }
 
     console.log('[fetchUserProfile] Profile data received:', data);
     
+    console.log('[fetchUserProfile] Profile data received:', data);
+    
     if (!data) {
+      console.warn('[fetchUserProfile] No profile data returned from query');
       console.warn('[fetchUserProfile] No profile data returned from query');
       return null;
     }
     
+    console.log('[fetchUserProfile] Processing profile data...');
     console.log('[fetchUserProfile] Processing profile data...');
     return {
       id: data.id,
@@ -77,6 +94,8 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     };
   } catch (error) {
     console.error('[fetchUserProfile] Catch block error:', error);
+    console.error('[fetchUserProfile] Error type:', typeof error);
+    console.error('[fetchUserProfile] Error constructor:', error?.constructor?.name);
     console.error('[fetchUserProfile] Error type:', typeof error);
     console.error('[fetchUserProfile] Error constructor:', error?.constructor?.name);
     return null;
