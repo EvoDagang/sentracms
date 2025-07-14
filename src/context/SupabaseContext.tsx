@@ -32,40 +32,19 @@ interface SupabaseProviderProps {
   children: ReactNode;
 }
 
-// Helper function to create a timeout promise
-const createTimeoutPromise = (ms: number) => {
-  return new Promise((_, reject) => {
-    setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
-  });
-};
-
 // Helper function to fetch user profile
 const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
   try {
     console.log('[fetchUserProfile] Starting profile fetch for user ID:', userId);
     console.log('[fetchUserProfile] About to execute Supabase query...');
     
-    // NEW LOG: Before query execution
-    console.log('[fetchUserProfile] Before Supabase query execution.');
-
     const startTime = Date.now();
-    
-    // Add timeout to prevent hanging
-    const queryPromise = supabase
+    const { data, error } = await supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
     
-    const timeoutPromise = createTimeoutPromise(30000); // 30 second timeout
-    
-    console.log('[fetchUserProfile] Starting query with 30s timeout...');
-    
-    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-    
-    // NEW LOG: After query execution, showing data and error
-    console.log('[fetchUserProfile] After Supabase query execution. Data:', data, 'Error:', error);
-
     const endTime = Date.now();
     console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
 
@@ -100,18 +79,6 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.error('[fetchUserProfile] Catch block error:', error);
     console.error('[fetchUserProfile] Error type:', typeof error);
     console.error('[fetchUserProfile] Error constructor:', error?.constructor?.name);
-    
-    // If it's a timeout error, let's try a simple connection test
-    if (error instanceof Error && error.message.includes('timed out')) {
-      console.log('[fetchUserProfile] Query timed out, testing basic Supabase connection...');
-      try {
-        const testResult = await supabase.from('user_profiles').select('count').limit(1);
-        console.log('[fetchUserProfile] Basic connection test result:', testResult);
-      } catch (testError) {
-        console.error('[fetchUserProfile] Basic connection test failed:', testError);
-      }
-    }
-    
     return null;
   }
 };
@@ -121,9 +88,45 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Function to test basic Supabase connection
+    const testSupabaseConnection = async () => {
+      console.log('[SupabaseConnectionTest] Initiating basic connection test...');
+      const testStartTime = Date.now();
+      try {
+        // Attempt a simple count query on a known table
+        const { count, error } = await supabase
+          .from('user_profiles')
+          .select('count', { head: true }); // Use head: true for a lightweight count
+
+        const testEndTime = Date.now();
+        if (error) {
+          console.error(`[SupabaseConnectionTest] Connection test FAILED after ${testEndTime - testStartTime}ms:`, error);
+          console.error('[SupabaseConnectionTest] Error details:', {
+            message: error.message,
+            code: error.code,
+            details: error.details,
+            hint: error.hint
+          });
+        } else {
+          console.log(`[SupabaseConnectionTest] Connection test SUCCESS after ${testEndTime - testStartTime}ms. User profiles count: ${count}`);
+        }
+      } catch (testError: any) {
+        console.error(`[SupabaseConnectionTest] Connection test threw an exception:`, testError);
+        console.error('[SupabaseConnectionTest] Exception details:', {
+          message: testError.message,
+          name: testError.name,
+          stack: testError.stack
+        });
+      }
+    };
+
     // Get initial session and user profile
     const initializeAuth = async () => {
       console.log('[SupabaseContext] Starting authentication initialization at:', new Date().toISOString());
+      
+      // Run the connection test first
+      await testSupabaseConnection();
+
       try {
         console.log('[SupabaseContext] Fetching initial session...');
         const { data: { session } } = await supabase.auth.getSession();
