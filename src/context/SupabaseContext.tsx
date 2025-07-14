@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '../lib/supabase';
+import type { User } from '@supabase/supabase-js';
 
 export interface AuthUser {
   id: string;
@@ -22,6 +23,7 @@ interface SupabaseContextType {
     clientId?: number;
     permissions: string[];
   }) => Promise<{ data: any; error: any }>;
+  updateUserProfile: (updates: Partial<AuthUser>) => Promise<{ error: any }>;
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -30,41 +32,72 @@ interface SupabaseProviderProps {
   children: ReactNode;
 }
 
+// Helper function to fetch user profile
+const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+
+    return {
+      id: data.id,
+      email: data.email || '',
+      name: data.name,
+      role: data.role,
+      clientId: data.client_id,
+      permissions: data.permissions || ['all']
+    };
+  } catch (error) {
+    console.error('Error in fetchUserProfile:', error);
+    return null;
+  }
+};
+
 export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        // Convert Supabase user to AuthUser format
-        const authUser: AuthUser = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email || '',
-          role: session.user.user_metadata?.role || 'Team',
-          clientId: session.user.user_metadata?.clientId,
-          permissions: session.user.user_metadata?.permissions || ['all']
-        };
-        setUser(authUser);
+    // Get initial session and user profile
+    const initializeAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          if (profile) {
+            // Update last login
+            await supabase.rpc('update_last_login', { user_id: session.user.id });
+            setUser({ ...profile, email: session.user.email || profile.email });
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing auth:', error);
       }
       setLoading(false);
-    });
+    };
+
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        if (session?.user) {
-          const authUser: AuthUser = {
-            id: session.user.id,
-            email: session.user.email || '',
-            name: session.user.user_metadata?.name || session.user.email || '',
-            role: session.user.user_metadata?.role || 'Team',
-            clientId: session.user.user_metadata?.clientId,
-            permissions: session.user.user_metadata?.permissions || ['all']
-          };
-          setUser(authUser);
+        if (event === 'SIGNED_IN' && session?.user) {
+          const profile = await fetchUserProfile(session.user.id);
+          if (profile) {
+            // Update last login
+            await supabase.rpc('update_last_login', { user_id: session.user.id });
+            setUser({ ...profile, email: session.user.email || profile.email });
+          }
+        } else if (event === 'SIGNED_OUT') {
+          setUser(null);
         } else {
           setUser(null);
         }
@@ -178,6 +211,34 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
     }
   };
 
+  const updateUserProfile = async (updates: Partial<AuthUser>) => {
+    try {
+      if (!user) {
+        return { error: { message: 'No user logged in' } };
+      }
+
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          name: updates.name,
+          role: updates.role,
+          client_id: updates.clientId,
+          permissions: updates.permissions,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Update local user state
+      setUser(prev => prev ? { ...prev, ...updates } : null);
+      
+      return { error: null };
+    } catch (error: any) {
+      return { error: { message: error.message || 'Update failed' } };
+    }
+  };
+
   const isAuthenticated = !!user;
 
   const value = {
@@ -186,7 +247,8 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
     isAuthenticated,
     signIn,
     signOut,
-    signUp
+    signUp,
+    updateUserProfile
   };
 
   return (
