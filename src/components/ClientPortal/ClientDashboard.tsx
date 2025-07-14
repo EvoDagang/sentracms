@@ -452,9 +452,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
                       </div>
                     </div>
                   </div>
-                  <button className="bg-white text-slate-900 px-4 py-2 rounded-lg font-medium hover:bg-slate-50 transition-colors border border-slate-200 shadow-sm">
-                    Select
-                  </button>
                 </div>
 
                 <div className="bg-white rounded-lg p-4 border border-white/50">
