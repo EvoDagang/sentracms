@@ -1,6 +1,5 @@
 import { create } from 'zustand';
-// Removed imports for supabaseService, as it's no longer used
-// import { clientService, invoiceService, paymentService, componentService, progressStepService, calendarEventService, chatService, tagService, userService } from '../services/supabaseService';
+import { supabase } from '../lib/supabase';
 
 interface Client {
   id: number;
@@ -149,6 +148,7 @@ interface AppState {
   chats: Chat[];
   tags: Tag[];
   users: User[];
+  unread: number; // Add unread property to Chat interface
 
   // Loading states
   loading: {
@@ -223,312 +223,15 @@ interface AppState {
 
 export const useAppStore = create<AppState>((set, get) => ({
   // Initial state
-  clients: [
-    {
-      id: 1,
-      name: 'Nik Salwani Bt.Nik Ab Rahman',
-      businessName: 'Ahmad Tech Solutions',
-      email: 'client@sentra.com',
-      phone: '+60 12-345 6789',
-      status: 'Complete',
-      packageName: undefined,
-      tags: ['VIP', 'Priority'],
-      totalSales: 15000,
-      totalCollection: 12000,
-      balance: 3000,
-      lastActivity: new Date().toISOString().split('T')[0],
-      invoiceCount: 2,
-      registeredAt: '2024-01-15T00:00:00Z',
-      company: 'Ahmad Tech Solutions',
-      address: 'Kuala Lumpur, Malaysia',
-      notes: 'Demo client for testing',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      businessName: 'Johnson Enterprises',
-      email: 'sarah@johnson.com',
-      phone: '+60 12-987 6543',
-      status: 'Pending',
-      packageName: undefined,
-      tags: ['New Client'],
-      totalSales: 8000,
-      totalCollection: 5000,
-      balance: 3000,
-      lastActivity: new Date().toISOString().split('T')[0],
-      invoiceCount: 1,
-      registeredAt: '2024-02-01T00:00:00Z',
-      company: 'Johnson Enterprises',
-      address: 'Petaling Jaya, Malaysia',
-      notes: 'New client onboarding',
-      createdAt: '2024-02-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  invoices: [
-    {
-      id: 'INV-001',
-      clientId: 1,
-      packageName: 'Kuasa 360',
-      amount: 15000,
-      paid: 12000,
-      due: 3000,
-      status: 'Partial',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'INV-002',
-      clientId: 2,
-      packageName: 'Basic Package',
-      amount: 8000,
-      paid: 5000,
-      due: 3000,
-      status: 'Partial',
-      createdAt: '2024-02-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  payments: [
-    {
-      id: 'PAY-001',
-      clientId: 1,
-      invoiceId: 'INV-001',
-      amount: 12000,
-      paymentSource: 'Online Transfer',
-      status: 'Paid',
-      paidAt: '2024-01-20T00:00:00Z',
-      createdAt: '2024-01-20T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'PAY-002',
-      clientId: 2,
-      invoiceId: 'INV-002',
-      amount: 5000,
-      paymentSource: 'Bank Transfer',
-      status: 'Paid',
-      paidAt: '2024-02-05T00:00:00Z',
-      createdAt: '2024-02-05T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  components: [
-    {
-      id: 'comp-001',
-      clientId: 1,
-      name: 'Website Development',
-      price: 'RM 5,000',
-      active: true,
-      invoiceId: 'INV-001',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'comp-002',
-      clientId: 1,
-      name: 'Mobile App Development',
-      price: 'RM 8,000',
-      active: true,
-      invoiceId: 'INV-001',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'comp-003',
-      clientId: 1,
-      name: 'SEO Optimization',
-      price: 'RM 2,000',
-      active: true,
-      invoiceId: 'INV-001',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  progressSteps: [
-   ],
-  calendarEvents: [
-    {
-      id: 'event-001',
-      clientId: 1,
-      title: 'Project Kickoff Meeting',
-      startDate: '2024-01-20',
-      endDate: '2024-01-20',
-      startTime: '10:00',
-      endTime: '11:30',
-      description: 'Initial project discussion and planning',
-      type: 'meeting',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'event-002',
-      clientId: 1,
-      title: 'Design Review',
-      startDate: '2024-02-05',
-      endDate: '2024-02-05',
-      startTime: '14:00',
-      endTime: '15:00',
-      description: 'Review and approve design mockups',
-      type: 'meeting',
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  chats: [
-    {
-      id: 1,
-      clientId: 1,
-      client: 'Ahmad Tech Solutions',
-      avatar: 'AT',
-      lastMessage: 'Thank you for the project update',
-      lastMessageAt: '2024-01-20T10:30:00Z',
-      unread_count: 2, // Changed from 'unread' to 'unread_count' to match DB schema
-      online: true,
-      messages: [
-        {
-          id: 1,
-          sender: 'client',
-          content: 'Hi! I want to check our project progress.',
-          messageType: 'text',
-          timestamp: '10:15 AM'
-        },
-        {
-          id: 2,
-          sender: 'admin',
-          content: 'Hello! The project is going well. We\'ve completed the design phase and are now moving to development.',
-          messageType: 'text',
-          timestamp: '10:18 AM'
-        },
-        {
-          id: 3,
-          sender: 'client',
-          content: 'Great! Can you share some screenshots?',
-          messageType: 'text',
-          timestamp: '10:20 AM'
-        },
-        {
-          id: 4,
-          sender: 'admin',
-          content: 'Sure! I\'ll send them shortly. The UI looks very clean and modern.',
-          messageType: 'text',
-          timestamp: '10:22 AM'
-        },
-        {
-          id: 5,
-          sender: 'client',
-          content: 'Thank you for the project update',
-          messageType: 'text',
-          timestamp: '10:30 AM'
-        }
-      ],
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 2,
-      clientId: 2,
-      client: 'Johnson Enterprises',
-      avatar: 'JE',
-      lastMessage: 'Looking forward to getting started!',
-      lastMessageAt: '2024-02-01T15:45:00Z',
-      unread_count: 0, // Changed from 'unread' to 'unread_count' to match DB schema
-      online: false,
-      messages: [
-        {
-          id: 1,
-          sender: 'client',
-          content: 'Hello! I\'m excited about our new project.',
-          messageType: 'text',
-          timestamp: '3:30 PM'
-        },
-        {
-          id: 2,
-          sender: 'admin',
-          content: 'Welcome! We\'re excited to work with you. Let\'s schedule a kickoff meeting.',
-          messageType: 'text',
-          timestamp: '3:35 PM'
-        },
-        {
-          id: 3,
-          sender: 'client',
-          content: 'Looking forward to getting started!',
-          messageType: 'text',
-          timestamp: '3:45 PM'
-        }
-      ],
-      createdAt: '2024-02-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  tags: [
-    {
-      id: 'tag-001',
-      name: 'VIP',
-      color: '#FFD700',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'tag-002',
-      name: 'Priority',
-      color: '#FF6B6B',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'tag-003',
-      name: 'New Client',
-      color: '#4ECDC4',
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
-
-  users: [
-    {
-      id: 'user-001',
-      name: 'Admin User',
-      email: 'admin@sentra.com',
-      role: 'Super Admin',
-      status: 'Active',
-      lastLogin: '2024-01-20T08:00:00Z',
-      permissions: ['all'],
-      createdAt: '2024-01-01T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'user-002',
-      name: 'Nik Salwani Bt.Nik Ab Rahman',
-      email: 'client@sentra.com',
-      role: 'Client Admin',
-      status: 'Active',
-      lastLogin: '2024-01-19T14:30:00Z',
-      clientId: 1,
-      permissions: ['client_dashboard', 'client_profile', 'client_messages'],
-      createdAt: '2024-01-15T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    },
-    {
-      id: 'user-003',
-      name: 'Team Member',
-      email: 'team@sentra.com',
-      role: 'Team',
-      status: 'Active',
-      lastLogin: '2024-01-20T09:15:00Z',
-      permissions: ['clients', 'calendar', 'chat', 'reports', 'dashboard'],
-      createdAt: '2024-01-10T00:00:00Z',
-      updatedAt: new Date().toISOString()
-    }
-  ],
+  clients: [],
+  invoices: [],
+  payments: [],
+  components: [],
+  progressSteps: [],
+  calendarEvents: [],
+  chats: [],
+  tags: [],
+  users: [],
 
   loading: {
     clients: false,
@@ -545,99 +248,307 @@ export const useAppStore = create<AppState>((set, get) => ({
   // Actions
   fetchClients: async () => {
     set((state) => ({ loading: { ...state.loading, clients: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, clients: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('clients')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        clients: data || [],
+        loading: { ...state.loading, clients: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching clients:', error);
+      set((state) => ({ loading: { ...state.loading, clients: false } }));
+    }
   },
 
   fetchInvoices: async () => {
     set((state) => ({ loading: { ...state.loading, invoices: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, invoices: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        invoices: data || [],
+        loading: { ...state.loading, invoices: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching invoices:', error);
+      set((state) => ({ loading: { ...state.loading, invoices: false } }));
+    }
   },
 
   fetchPayments: async () => {
     set((state) => ({ loading: { ...state.loading, payments: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, payments: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        payments: data || [],
+        loading: { ...state.loading, payments: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching payments:', error);
+      set((state) => ({ loading: { ...state.loading, payments: false } }));
+    }
   },
 
   fetchComponents: async () => {
     set((state) => ({ loading: { ...state.loading, components: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, components: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('components')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        components: data || [],
+        loading: { ...state.loading, components: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching components:', error);
+      set((state) => ({ loading: { ...state.loading, components: false } }));
+    }
   },
 
   fetchProgressSteps: async () => {
     set((state) => ({ loading: { ...state.loading, progressSteps: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, progressSteps: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('progress_steps')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        progressSteps: data || [],
+        loading: { ...state.loading, progressSteps: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching progress steps:', error);
+      set((state) => ({ loading: { ...state.loading, progressSteps: false } }));
+    }
   },
 
   fetchCalendarEvents: async () => {
     set((state) => ({ loading: { ...state.loading, calendarEvents: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, calendarEvents: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        calendarEvents: data || [],
+        loading: { ...state.loading, calendarEvents: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching calendar events:', error);
+      set((state) => ({ loading: { ...state.loading, calendarEvents: false } }));
+    }
   },
 
   fetchChats: async () => {
     set((state) => ({ loading: { ...state.loading, chats: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, chats: false } }));
+    try {
+      const { data: chatsData, error: chatsError } = await supabase
+        .from('chats')
+        .select('*')
+        .order('updated_at', { ascending: false });
+      
+      if (chatsError) throw chatsError;
+      
+      // Fetch messages for each chat
+      const chatsWithMessages = await Promise.all(
+        (chatsData || []).map(async (chat) => {
+          const { data: messagesData, error: messagesError } = await supabase
+            .from('chat_messages')
+            .select('*')
+            .eq('chat_id', chat.id)
+            .order('created_at', { ascending: true });
+          
+          if (messagesError) {
+            console.error('Error fetching messages for chat:', chat.id, messagesError);
+            return { ...chat, messages: [] };
+          }
+          
+          return {
+            ...chat,
+            client: chat.client_name,
+            unread: chat.unread_count,
+            online: chat.online,
+            lastMessage: chat.last_message,
+            timestamp: chat.last_message_at ? new Date(chat.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
+            messages: messagesData || []
+          };
+        })
+      );
+      
+      set((state) => ({ 
+        chats: chatsWithMessages,
+        loading: { ...state.loading, chats: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching chats:', error);
+      set((state) => ({ loading: { ...state.loading, chats: false } }));
+    }
   },
 
   fetchTags: async () => {
     set((state) => ({ loading: { ...state.loading, tags: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, tags: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .select('*')
+        .order('name', { ascending: true });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        tags: data || [],
+        loading: { ...state.loading, tags: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching tags:', error);
+      set((state) => ({ loading: { ...state.loading, tags: false } }));
+    }
   },
 
   fetchUsers: async () => {
     set((state) => ({ loading: { ...state.loading, users: true } }));
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, 300));
-    set((state) => ({ loading: { ...state.loading, users: false } }));
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      set((state) => ({ 
+        users: data || [],
+        loading: { ...state.loading, users: false }
+      }));
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      set((state) => ({ loading: { ...state.loading, users: false } }));
+    }
   },
 
   addClient: (clientData) => {
-    const newClient: Client = {
-      ...clientData,
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertClient = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .insert([{
+            name: clientData.name,
+            business_name: clientData.businessName,
+            email: clientData.email,
+            phone: clientData.phone,
+            status: clientData.status,
+            package_name: clientData.packageName,
+            tags: clientData.tags || [],
+            total_sales: clientData.totalSales || 0,
+            total_collection: clientData.totalCollection || 0,
+            balance: clientData.balance || 0,
+            last_activity: clientData.lastActivity,
+            invoice_count: clientData.invoiceCount || 0,
+            registered_at: clientData.registeredAt,
+            company: clientData.company,
+            address: clientData.address,
+            notes: clientData.notes
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          clients: [...state.clients, data],
+        }));
+      } catch (error) {
+        console.error('Error adding client:', error);
+      }
     };
-    set((state) => ({
-      clients: [...state.clients, newClient],
-    }));
+    insertClient();
   },
 
   updateClient: (id, updates) => {
-    set((state) => ({
-      clients: state.clients.map((client) =>
-        client.id === id
-          ? { ...client, ...updates, updatedAt: new Date().toISOString() }
-          : client
-      ),
-    }));
+    const updateClientInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('clients')
+          .update({
+            name: updates.name,
+            business_name: updates.businessName,
+            email: updates.email,
+            phone: updates.phone,
+            status: updates.status,
+            package_name: updates.packageName,
+            tags: updates.tags,
+            company: updates.company,
+            address: updates.address,
+            notes: updates.notes
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          clients: state.clients.map((client) =>
+            client.id === id ? data : client
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating client:', error);
+      }
+    };
+    updateClientInDB();
   },
 
   deleteClient: (id) => {
-    set((state) => ({
-      clients: state.clients.filter((client) => client.id !== id),
-      invoices: state.invoices.filter((invoice) => invoice.clientId !== id),
-      payments: state.payments.filter((payment) => payment.clientId !== id),
-      components: state.components.filter((component) => component.clientId !== id),
-      progressSteps: state.progressSteps.filter((step) => step.clientId !== id),
-      calendarEvents: state.calendarEvents.filter((event) => event.clientId !== id),
-      chats: state.chats.filter((chat) => chat.clientId !== id),
-    }));
+    const deleteClientFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('clients')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          clients: state.clients.filter((client) => client.id !== id),
+          invoices: state.invoices.filter((invoice) => invoice.clientId !== id),
+          payments: state.payments.filter((payment) => payment.clientId !== id),
+          components: state.components.filter((component) => component.clientId !== id),
+          progressSteps: state.progressSteps.filter((step) => step.clientId !== id),
+          calendarEvents: state.calendarEvents.filter((event) => event.clientId !== id),
+          chats: state.chats.filter((chat) => chat.clientId !== id),
+        }));
+      } catch (error) {
+        console.error('Error deleting client:', error);
+      }
+    };
+    deleteClientFromDB();
   },
 
   getClientById: (id) => {
@@ -645,101 +556,112 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addInvoice: (invoiceData) => {
-    const newInvoice: Invoice = {
-      id: `INV-${Date.now()}`,
-      clientId: invoiceData.clientId,
-      packageName: invoiceData.packageName,
-      amount: invoiceData.amount,
-      paid: 0,
-      due: invoiceData.amount,
-      status: 'Pending',
-      createdAt: invoiceData.invoiceDate,
-      updatedAt: new Date().toISOString(),
+    const insertInvoice = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .insert([{
+            client_id: invoiceData.clientId,
+            package_name: invoiceData.packageName,
+            amount: invoiceData.amount,
+            due: invoiceData.amount,
+            created_at: invoiceData.invoiceDate
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        // Update local state
+        set((state) => ({
+          invoices: [...state.invoices, data],
+        }));
+        
+        // Auto-create tag if it doesn't exist
+        const { data: existingTag } = await supabase
+          .from('tags')
+          .select('id')
+          .eq('name', invoiceData.packageName)
+          .single();
+        
+        if (!existingTag) {
+          await supabase
+            .from('tags')
+            .insert([{
+              name: invoiceData.packageName,
+              color: '#3B82F6'
+            }]);
+        }
+        
+        // Auto-create progress step for the package
+        await supabase
+          .from('progress_steps')
+          .insert([{
+            client_id: invoiceData.clientId,
+            title: `${invoiceData.packageName} - Package Setup`,
+            description: `Complete the setup and delivery of ${invoiceData.packageName} package`,
+            deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+            important: true
+          }]);
+        
+        // Refresh data
+        get().fetchTags();
+        get().fetchProgressSteps();
+        
+      } catch (error) {
+        console.error('Error adding invoice:', error);
+      }
     };
-    
-    set((state) => ({
-      invoices: [...state.invoices, newInvoice],
-      clients: state.clients.map((client) =>
-        client.id === invoiceData.clientId
-          ? {
-              ...client,
-              packageName: invoiceData.packageName, // Update client's package name
-              totalSales: client.totalSales + invoiceData.amount,
-              balance: client.balance + invoiceData.amount,
-              invoiceCount: client.invoiceCount + 1,
-              // Auto-assign the package tag to the client
-              tags: client.tags && client.tags.includes(invoiceData.packageName) 
-                ? client.tags 
-                : [...(client.tags || []), invoiceData.packageName],
-              updatedAt: new Date().toISOString(),
-            }
-          : client
-      ),
-      // Auto-create tag with package name if it doesn't exist
-      tags: state.tags.some(tag => tag.name === invoiceData.packageName) 
-        ? state.tags 
-        : [...state.tags, {
-            id: `tag-${Date.now()}`,
-            name: invoiceData.packageName,
-            color: '#3B82F6', // Default blue color
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-          }]
-    }));
-    
-    // Auto-create a progress step for the package
-    const packageProgressStep: ProgressStep = {
-      id: `step-${Date.now()}-package`,
-      clientId: invoiceData.clientId,
-      title: `${invoiceData.packageName} - Package Setup`,
-      description: `Complete the setup and delivery of ${invoiceData.packageName} package`,
-      deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
-      completed: false,
-      important: true, // Mark package steps as important
-      comments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    set((state) => ({
-      progressSteps: [...state.progressSteps, packageProgressStep],
-    }));
+    insertInvoice();
   },
 
   updateInvoice: (id, updates) => {
-    set((state) => ({
-      invoices: state.invoices.map((invoice) =>
-        invoice.id === id
-          ? { ...invoice, ...updates, updatedAt: new Date().toISOString() }
-          : invoice
-      ),
-    }));
+    const updateInvoiceInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('invoices')
+          .update({
+            package_name: updates.packageName,
+            amount: updates.amount,
+            created_at: updates.createdAt
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          invoices: state.invoices.map((invoice) =>
+            invoice.id === id ? data : invoice
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating invoice:', error);
+      }
+    };
+    updateInvoiceInDB();
   },
 
   deleteInvoice: (invoiceId) => {
-    const state = get();
-    const invoice = state.invoices.find(inv => inv.id === invoiceId);
-    
-    if (invoice) {
-      set((state) => ({
-        invoices: state.invoices.filter((inv) => inv.id !== invoiceId),
-        // Keep components - only delete components tied to this specific invoice
-        components: state.components.filter((comp) => comp.invoiceId !== invoiceId),
-        clients: state.clients.map((client) =>
-          client.id === invoice.clientId
-            ? {
-                ...client,
-                totalSales: Math.max(0, client.totalSales - invoice.amount),
-                balance: Math.max(0, client.balance - invoice.amount),
-                invoiceCount: Math.max(0, client.invoiceCount - 1),
-                // Keep package name - don't clear it when deleting invoice
-                updatedAt: new Date().toISOString(),
-              }
-            : client
-        ),
-        // Keep progress steps - don't delete them when invoice is deleted
-      }));
-    }
+    const deleteInvoiceFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('invoices')
+          .delete()
+          .eq('id', invoiceId);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          invoices: state.invoices.filter((inv) => inv.id !== invoiceId),
+          components: state.components.filter((comp) => comp.invoiceId !== invoiceId),
+        }));
+      } catch (error) {
+        console.error('Error deleting invoice:', error);
+      }
+    };
+    deleteInvoiceFromDB();
   },
 
   getInvoicesByClientId: (clientId) => {
@@ -747,109 +669,81 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addPayment: (paymentData) => {
-    const newPayment: Payment = {
-      ...paymentData,
-      id: `PAY-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertPayment = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payments')
+          .insert([{
+            client_id: paymentData.clientId,
+            invoice_id: paymentData.invoiceId,
+            amount: paymentData.amount,
+            payment_source: paymentData.paymentSource,
+            status: paymentData.status,
+            paid_at: paymentData.paidAt,
+            receipt_file_url: paymentData.receiptFileUrl
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          payments: [...state.payments, data],
+        }));
+      } catch (error) {
+        console.error('Error adding payment:', error);
+      }
     };
-    set((state) => ({
-      payments: [...state.payments, newPayment],
-      clients: state.clients.map((client) =>
-        client.id === paymentData.clientId
-          ? {
-              ...client,
-              totalCollection: client.totalCollection + paymentData.amount,
-              balance: Math.max(0, client.balance - paymentData.amount),
-              updatedAt: new Date().toISOString(),
-            }
-          : client
-      ),
-      invoices: state.invoices.map((invoice) =>
-        invoice.id === paymentData.invoiceId
-          ? {
-              ...invoice,
-              paid: invoice.paid + paymentData.amount,
-              due: Math.max(0, invoice.due - paymentData.amount),
-              status: invoice.due - paymentData.amount <= 0 ? 'Paid' : 'Partial',
-              updatedAt: new Date().toISOString(),
-            }
-          : invoice
-      ),
-    }));
+    insertPayment();
   },
 
   updatePayment: (id, updates) => {
-    const state = get();
-    const payment = state.payments.find(p => p.id === id);
-    const oldAmount = payment ? payment.amount : 0;
-    const newAmount = updates.amount || oldAmount;
-    const amountDifference = newAmount - oldAmount;
-    
-    set((state) => ({
-      payments: state.payments.map((payment) =>
-        payment.id === id
-          ? { ...payment, ...updates, updatedAt: new Date().toISOString() }
-          : payment
-      ),
-      // Update client totals
-      clients: payment ? state.clients.map((client) =>
-        client.id === payment.clientId
-          ? {
-              ...client,
-              totalCollection: client.totalCollection + amountDifference,
-              balance: Math.max(0, client.balance - amountDifference),
-              updatedAt: new Date().toISOString(),
-            }
-          : client
-      ) : state.clients,
-      // Update invoice totals
-      invoices: payment ? state.invoices.map((invoice) =>
-        invoice.id === payment.invoiceId
-          ? {
-              ...invoice,
-              paid: invoice.paid + amountDifference,
-              due: Math.max(0, invoice.due - amountDifference),
-              status: (invoice.due - amountDifference) <= 0 ? 'Paid' : 'Partial',
-              updatedAt: new Date().toISOString(),
-            }
-          : invoice
-      ) : state.invoices,
-    }));
+    const updatePaymentInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('payments')
+          .update({
+            amount: updates.amount,
+            payment_source: updates.paymentSource,
+            status: updates.status,
+            paid_at: updates.paidAt
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          payments: state.payments.map((payment) =>
+            payment.id === id ? data : payment
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating payment:', error);
+      }
+    };
+    updatePaymentInDB();
   },
 
   deletePayment: (id) => {
-    const state = get();
-    const payment = state.payments.find(p => p.id === id);
-    
-    if (payment) {
-      set((state) => ({
-        payments: state.payments.filter((payment) => payment.id !== id),
-        // Update client totals
-        clients: state.clients.map((client) =>
-          client.id === payment.clientId
-            ? {
-                ...client,
-                totalCollection: Math.max(0, client.totalCollection - payment.amount),
-                balance: client.balance + payment.amount,
-                updatedAt: new Date().toISOString(),
-              }
-            : client
-        ),
-        // Update invoice totals
-        invoices: state.invoices.map((invoice) =>
-          invoice.id === payment.invoiceId
-            ? {
-                ...invoice,
-                paid: Math.max(0, invoice.paid - payment.amount),
-                due: invoice.due + payment.amount,
-                status: invoice.paid - payment.amount <= 0 ? 'Pending' : 'Partial',
-                updatedAt: new Date().toISOString(),
-              }
-            : invoice
-        ),
-      }));
-    }
+    const deletePaymentFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('payments')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          payments: state.payments.filter((payment) => payment.id !== id),
+        }));
+      } catch (error) {
+        console.error('Error deleting payment:', error);
+      }
+    };
+    deletePaymentFromDB();
   },
 
   getPaymentsByClientId: (clientId) => {
@@ -857,78 +751,135 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addComponent: (componentData) => {
-    const newComponent: Component = {
-      ...componentData,
-      id: `comp-${Date.now()}`,
-      price: componentData.price || 'RM 0',
-      active: componentData.active !== undefined ? componentData.active : true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertComponent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('components')
+          .insert([{
+            client_id: componentData.clientId,
+            name: componentData.name,
+            price: componentData.price || 'RM 0',
+            active: componentData.active !== undefined ? componentData.active : true,
+            invoice_id: componentData.invoiceId
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        // Create corresponding progress step
+        await supabase
+          .from('progress_steps')
+          .insert([{
+            client_id: componentData.clientId,
+            title: componentData.name,
+            description: `Complete the ${componentData.name} component`,
+            deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            important: false
+          }]);
+        
+        set((state) => ({
+          components: [...state.components, data],
+        }));
+        
+        // Refresh progress steps
+        get().fetchProgressSteps();
+      } catch (error) {
+        console.error('Error adding component:', error);
+      }
     };
-    
-    // Create corresponding progress step for this component
-    const newProgressStep: ProgressStep = {
-      id: `step-${Date.now()}-comp`,
-      clientId: componentData.clientId,
-      title: componentData.name,
-      description: `Complete the ${componentData.name} component`,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      completed: false,
-      important: false,
-      comments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    set((state) => ({
-      components: [...state.components, newComponent],
-      progressSteps: [...state.progressSteps, newProgressStep],
-    }));
+    insertComponent();
   },
 
   addComponents: (componentsData) => {
-    const newComponents: Component[] = componentsData.map((componentData, index) => ({
-      ...componentData,
-      id: `comp-${Date.now()}-${index}`,
-      price: componentData.price || 'RM 0',
-      active: componentData.active !== undefined ? componentData.active : true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    
-    // Create corresponding progress steps for all components
-    const newProgressSteps: ProgressStep[] = componentsData.map((componentData, index) => ({
-      id: `step-${Date.now()}-comp-${index}`,
-      clientId: componentData.clientId,
-      title: componentData.name,
-      description: `Complete the ${componentData.name} component`,
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-      completed: false,
-      important: false,
-      comments: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }));
-    
-    set((state) => ({
-      components: [...state.components, ...newComponents],
-      progressSteps: [...state.progressSteps, ...newProgressSteps],
-    }));
+    const insertComponents = async () => {
+      try {
+        const componentsToInsert = componentsData.map(componentData => ({
+          client_id: componentData.clientId,
+          name: componentData.name,
+          price: componentData.price || 'RM 0',
+          active: componentData.active !== undefined ? componentData.active : true,
+          invoice_id: componentData.invoiceId
+        }));
+        
+        const { data, error } = await supabase
+          .from('components')
+          .insert(componentsToInsert)
+          .select();
+        
+        if (error) throw error;
+        
+        // Create corresponding progress steps
+        const progressStepsToInsert = componentsData.map(componentData => ({
+          client_id: componentData.clientId,
+          title: componentData.name,
+          description: `Complete the ${componentData.name} component`,
+          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          important: false
+        }));
+        
+        await supabase
+          .from('progress_steps')
+          .insert(progressStepsToInsert);
+        
+        set((state) => ({
+          components: [...state.components, ...(data || [])],
+        }));
+        
+        // Refresh progress steps
+        get().fetchProgressSteps();
+      } catch (error) {
+        console.error('Error adding components:', error);
+      }
+    };
+    insertComponents();
   },
   updateComponent: (id, updates) => {
-    set((state) => ({
-      components: state.components.map((component) =>
-        component.id === id
-          ? { ...component, ...updates, updatedAt: new Date().toISOString() }
-          : component
-      ),
-    }));
+    const updateComponentInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('components')
+          .update({
+            name: updates.name,
+            price: updates.price,
+            active: updates.active
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          components: state.components.map((component) =>
+            component.id === id ? data : component
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating component:', error);
+      }
+    };
+    updateComponentInDB();
   },
 
   deleteComponent: (id) => {
-    set((state) => ({
-      components: state.components.filter((component) => component.id !== id),
-    }));
+    const deleteComponentFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('components')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          components: state.components.filter((component) => component.id !== id),
+        }));
+      } catch (error) {
+        console.error('Error deleting component:', error);
+      }
+    };
+    deleteComponentFromDB();
   },
 
   getComponentsByClientId: (clientId) => {
@@ -940,70 +891,83 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addProgressStep: (stepData) => {
-    const newStep: ProgressStep = {
-      ...stepData,
-      id: `step-${Date.now()}`,
-      comments: stepData.comments || [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertProgressStep = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('progress_steps')
+          .insert([{
+            client_id: stepData.clientId,
+            title: stepData.title,
+            description: stepData.description,
+            deadline: stepData.deadline,
+            important: stepData.important,
+            comments: stepData.comments || []
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          progressSteps: [...state.progressSteps, data],
+        }));
+      } catch (error) {
+        console.error('Error adding progress step:', error);
+      }
     };
-    set((state) => ({
-      progressSteps: [...state.progressSteps, newStep],
-    }));
+    insertProgressStep();
   },
 
   updateProgressStep: (id, updates) => {
-    set((state) => ({
-      progressSteps: state.progressSteps.map((step) =>
-        step.id === id
-          ? { ...step, ...updates, updatedAt: new Date().toISOString() }
-          : step
-      ),
-    }));
+    const updateProgressStepInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('progress_steps')
+          .update({
+            title: updates.title,
+            description: updates.description,
+            deadline: updates.deadline,
+            completed: updates.completed,
+            completed_date: updates.completedDate,
+            important: updates.important,
+            comments: updates.comments
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          progressSteps: state.progressSteps.map((step) =>
+            step.id === id ? data : step
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating progress step:', error);
+      }
+    };
+    updateProgressStepInDB();
   },
 
   deleteProgressStep: (id) => {
-    const state = get();
-    const stepToDelete = state.progressSteps.find(step => step.id === id);
-    
-    if (stepToDelete) {
-      // Check if this is a package step (contains "- Package Setup")
-      const isPackageStep = stepToDelete.title.includes(' - Package Setup');
-      
-      if (isPackageStep) {
-        // Extract package name from title (remove " - Package Setup")
-        const packageName = stepToDelete.title.replace(' - Package Setup', '');
+    const deleteProgressStepFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('progress_steps')
+          .delete()
+          .eq('id', id);
         
-        // Find all component steps that belong to this package
-        const packageComponentSteps = state.progressSteps.filter(step => 
-          step.clientId === stepToDelete.clientId && 
-          !step.title.includes(' - Package Setup') && // Not another package step
-          state.components.some(comp => 
-            comp.clientId === stepToDelete.clientId && 
-            comp.name === step.title &&
-            state.invoices.some(inv => 
-              inv.clientId === stepToDelete.clientId && 
-              inv.packageName === packageName &&
-              comp.invoiceId === inv.id
-            )
-          )
-        );
+        if (error) throw error;
         
-        // Delete package step and all its component steps
-        const stepIdsToDelete = [id, ...packageComponentSteps.map(step => step.id)];
-        
-        set((state) => ({
-          progressSteps: state.progressSteps.filter((step) => !stepIdsToDelete.includes(step.id)),
-          // Keep invoices and components - don't delete them when progress step is deleted
-        }));
-      } else {
-        // Regular step deletion
         set((state) => ({
           progressSteps: state.progressSteps.filter((step) => step.id !== id),
-          // Keep invoices and components - don't delete them when progress step is deleted
         }));
+      } catch (error) {
+        console.error('Error deleting progress step:', error);
       }
-    }
+    };
+    deleteProgressStepFromDB();
   },
 
   getProgressStepsByClientId: (clientId) => {
@@ -1011,145 +975,289 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addCalendarEvent: (eventData) => {
-    const newEvent: CalendarEvent = {
-      ...eventData,
-      id: `event-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertCalendarEvent = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .insert([{
+            client_id: eventData.clientId,
+            title: eventData.title,
+            start_date: eventData.startDate,
+            end_date: eventData.endDate,
+            start_time: eventData.startTime,
+            end_time: eventData.endTime,
+            description: eventData.description,
+            type: eventData.type
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          calendarEvents: [...state.calendarEvents, data],
+        }));
+      } catch (error) {
+        console.error('Error adding calendar event:', error);
+      }
     };
-    set((state) => ({
-      calendarEvents: [...state.calendarEvents, newEvent],
-    }));
+    insertCalendarEvent();
   },
 
   updateCalendarEvent: (id, updates) => {
-    set((state) => ({
-      calendarEvents: state.calendarEvents.map((event) =>
-        event.id === id
-          ? { ...event, ...updates, updatedAt: new Date().toISOString() }
-          : event
-      ),
-    }));
+    const updateCalendarEventInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('calendar_events')
+          .update({
+            title: updates.title,
+            start_date: updates.startDate,
+            end_date: updates.endDate,
+            start_time: updates.startTime,
+            end_time: updates.endTime,
+            description: updates.description,
+            type: updates.type
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          calendarEvents: state.calendarEvents.map((event) =>
+            event.id === id ? data : event
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating calendar event:', error);
+      }
+    };
+    updateCalendarEventInDB();
   },
 
   deleteCalendarEvent: (id) => {
-    set((state) => ({
-      calendarEvents: state.calendarEvents.filter((event) => event.id !== id),
-    }));
+    const deleteCalendarEventFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('calendar_events')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          calendarEvents: state.calendarEvents.filter((event) => event.id !== id),
+        }));
+      } catch (error) {
+        console.error('Error deleting calendar event:', error);
+      }
+    };
+    deleteCalendarEventFromDB();
   },
 
   addTag: async (tagData) => {
-    set((state) => {
-      const newTag = {
-        ...tagData,
-        id: `tag-${Date.now()}`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      return { tags: [...state.tags, newTag] };
-    });
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .insert([{
+          name: tagData.name,
+          color: tagData.color
+        }])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      set((state) => ({
+        tags: [...state.tags, data],
+      }));
+    } catch (error) {
+      console.error('Error adding tag:', error);
+      throw error;
+    }
   },
 
   updateTag: async (id, updates) => {
-    set((state) => ({
-      tags: state.tags.map((tag) =>
-        tag.id === id
-          ? { ...tag, ...updates, updatedAt: new Date().toISOString() }
-          : tag
-      ),
-    }));
+    try {
+      const { data, error } = await supabase
+        .from('tags')
+        .update({
+          name: updates.name,
+          color: updates.color
+        })
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      set((state) => ({
+        tags: state.tags.map((tag) =>
+          tag.id === id ? data : tag
+        ),
+      }));
+    } catch (error) {
+      console.error('Error updating tag:', error);
+      throw error;
+    }
   },
 
   deleteTag: async (id) => {
-    set((state) => ({
-      tags: state.tags.filter((tag) => tag.id !== id),
-    }));
+    try {
+      const { error } = await supabase
+        .from('tags')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+      
+      set((state) => ({
+        tags: state.tags.filter((tag) => tag.id !== id),
+      }));
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+      throw error;
+    }
   },
 
   addUser: (userData) => {
-    const newUser: User = {
-      ...userData,
-      id: `user-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+    const insertUser = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .insert([{
+            name: userData.name,
+            email: userData.email,
+            role: userData.role,
+            status: userData.status,
+            client_id: userData.clientId,
+            permissions: userData.permissions
+          }])
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          users: [...state.users, data],
+        }));
+      } catch (error) {
+        console.error('Error adding user:', error);
+      }
     };
-    set((state) => ({
-      users: [...state.users, newUser],
-    }));
+    insertUser();
   },
 
   updateUser: (id, updates) => {
-    set((state) => ({
-      users: state.users.map((user) =>
-        user.id === id
-          ? { ...user, ...updates, updatedAt: new Date().toISOString() }
-          : user
-      ),
-    }));
+    const updateUserInDB = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('user_profiles')
+          .update({
+            name: updates.name,
+            email: updates.email,
+            role: updates.role,
+            status: updates.status,
+            client_id: updates.clientId,
+            permissions: updates.permissions
+          })
+          .eq('id', id)
+          .select()
+          .single();
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          users: state.users.map((user) =>
+            user.id === id ? data : user
+          ),
+        }));
+      } catch (error) {
+        console.error('Error updating user:', error);
+      }
+    };
+    updateUserInDB();
   },
 
   deleteUser: (id) => {
-    set((state) => ({
-      users: state.users.filter((user) => user.id !== id),
-    }));
+    const deleteUserFromDB = async () => {
+      try {
+        const { error } = await supabase
+          .from('user_profiles')
+          .delete()
+          .eq('id', id);
+        
+        if (error) throw error;
+        
+        set((state) => ({
+          users: state.users.filter((user) => user.id !== id),
+        }));
+      } catch (error) {
+        console.error('Error deleting user:', error);
+      }
+    };
+    deleteUserFromDB();
   },
 
   copyComponentsToProgressSteps: (clientId) => {
-    const state = get();
-    const clientComponents = state.components.filter(comp => comp.clientId === clientId);
-    const clientInvoices = state.invoices.filter(inv => inv.clientId === clientId);
-    
-    // Create progress steps for packages (from invoices)
-    clientInvoices.forEach(invoice => {
-      const existingPackageStep = state.progressSteps.find(step => 
-        step.clientId === clientId && step.title === `${invoice.packageName} - Package Setup`
-      );
-      
-      if (!existingPackageStep) {
-        const packageStep: ProgressStep = {
-          id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}-pkg`,
-          clientId: clientId,
-          title: `${invoice.packageName} - Package Setup`,
-          description: `Complete the setup and delivery of ${invoice.packageName} package`,
-          deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(), // 60 days from now
-          completed: false,
-          important: true, // Mark package steps as important
-          comments: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+    const copyToProgressSteps = async () => {
+      try {
+        const state = get();
+        const clientComponents = state.components.filter(comp => comp.clientId === clientId);
+        const clientInvoices = state.invoices.filter(inv => inv.clientId === clientId);
         
-        set((state) => ({
-          progressSteps: [...state.progressSteps, packageStep],
-        }));
-      }
-    });
-    
-    // Create progress steps for components
-    clientComponents.forEach(component => {
-      const existingStep = state.progressSteps.find(step => 
-        step.clientId === clientId && step.title === component.name
-      );
-      
-      if (!existingStep) {
-        const componentStep: ProgressStep = {
-          id: `step-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          clientId: clientId,
-          title: component.name,
-          description: `Complete the ${component.name} component`,
-          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-          completed: false,
-          important: false,
-          comments: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        // Create progress steps for packages (from invoices)
+        for (const invoice of clientInvoices) {
+          const { data: existingStep } = await supabase
+            .from('progress_steps')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('title', `${invoice.packageName} - Package Setup`)
+            .single();
+          
+          if (!existingStep) {
+            await supabase
+              .from('progress_steps')
+              .insert([{
+                client_id: clientId,
+                title: `${invoice.packageName} - Package Setup`,
+                description: `Complete the setup and delivery of ${invoice.packageName} package`,
+                deadline: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+                important: true
+              }]);
+          }
+        }
         
-        set((state) => ({
-          progressSteps: [...state.progressSteps, componentStep],
-        }));
+        // Create progress steps for components
+        for (const component of clientComponents) {
+          const { data: existingStep } = await supabase
+            .from('progress_steps')
+            .select('id')
+            .eq('client_id', clientId)
+            .eq('title', component.name)
+            .single();
+          
+          if (!existingStep) {
+            await supabase
+              .from('progress_steps')
+              .insert([{
+                client_id: clientId,
+                title: component.name,
+                description: `Complete the ${component.name} component`,
+                deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                important: false
+              }]);
+          }
+        }
+        
+        // Refresh progress steps
+        get().fetchProgressSteps();
+      } catch (error) {
+        console.error('Error copying components to progress steps:', error);
       }
-    });
+    };
+    copyToProgressSteps();
   },
 
   getTotalSales: () => {
