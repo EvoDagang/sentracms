@@ -57,9 +57,9 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
       .eq('id', userId)
       .single();
     
-    const timeoutPromise = createTimeoutPromise(10000); // 10 second timeout
+    const timeoutPromise = createTimeoutPromise(30000); // 30 second timeout
     
-    console.log('[fetchUserProfile] Starting query with 10s timeout...');
+    console.log('[fetchUserProfile] Starting query with 30s timeout...');
     
     const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
     
