@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { supabase } from '../lib/supabase';
 
 export interface AuthUser {
   id: string;
@@ -21,7 +22,6 @@ interface SupabaseContextType {
     clientId?: number;
     permissions: string[];
   }) => Promise<{ data: any; error: any }>;
-  setDemoUser: (demoUser: AuthUser) => void;
 }
 
 const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
@@ -35,98 +35,111 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let mounted = true;
-    const demoUser = localStorage.getItem('demoUser');
-    console.log('SupabaseProvider: useEffect - demoUser from localStorage:', demoUser);
-    if (demoUser) {
-      try {
-        const parsedUser = JSON.parse(demoUser);
-        if (mounted) {
-          setUser(parsedUser);
-          console.log('SupabaseProvider: User restored from localStorage:', parsedUser);
-        }
-      } catch (error) {
-        console.error('Error parsing demo user from localStorage:', error);
-        localStorage.removeItem('demoUser');
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        // Convert Supabase user to AuthUser format
+        const authUser: AuthUser = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email || '',
+          role: session.user.user_metadata?.role || 'Team',
+          clientId: session.user.user_metadata?.clientId,
+          permissions: session.user.user_metadata?.permissions || ['all']
+        };
+        setUser(authUser);
       }
-    }
-    if (mounted) {
       setLoading(false);
-      console.log('SupabaseProvider: Initial load complete. User:', user, 'Loading:', false);
-    }
+    });
 
-    return () => {
-      mounted = false;
-    };
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          const authUser: AuthUser = {
+            id: session.user.id,
+            email: session.user.email || '',
+            name: session.user.user_metadata?.name || session.user.email || '',
+            role: session.user.user_metadata?.role || 'Team',
+            clientId: session.user.user_metadata?.clientId,
+            permissions: session.user.user_metadata?.permissions || ['all']
+          };
+          setUser(authUser);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    console.log('SupabaseProvider: signIn called with email:', email);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Hardcoded demo credentials
-      if (email === 'admin@sentra.com' && password === 'password123') {
-        const mockUser: AuthUser = {
-          id: 'admin-user-id',
-          email: 'admin@sentra.com',
-          name: 'Admin User',
-          role: 'Super Admin',
-          permissions: ['all']
-        };
-        localStorage.setItem('demoUser', JSON.stringify(mockUser));
-        setUser(mockUser);
-        console.log('SupabaseProvider: Admin user set to', mockUser);
-        return { data: { user: mockUser }, error: null };
-      } else if (email === 'client@sentra.com' && password === 'password123') {
-        const mockUser: AuthUser = {
-          id: 'client-user-id',
-          email: 'client@sentra.com',
-          name: 'Nik Salwani Bt.Nik Ab Rahman',
-          role: 'Client Admin',
-          clientId: 1,
-          permissions: ['client_dashboard', 'client_profile', 'client_messages']
-        };
-        localStorage.setItem('demoUser', JSON.stringify(mockUser));
-        setUser(mockUser);
-        console.log('SupabaseProvider: Client user set to', mockUser);
-        return { data: { user: mockUser }, error: null };
-      } else if (email === 'team@sentra.com' && password === 'password123') {
-        const mockUser: AuthUser = {
-          id: 'team-user-id',
-          email: 'team@sentra.com',
-          name: 'Team Member',
-          role: 'Team',
-          permissions: ['clients', 'calendar', 'chat', 'reports', 'dashboard']
-        };
-        localStorage.setItem('demoUser', JSON.stringify(mockUser));
-        setUser(mockUser);
-        console.log('SupabaseProvider: Team user set to', mockUser);
-        return { data: { user: mockUser }, error: null };
-      } else {
-        console.log('SupabaseProvider: Invalid credentials provided');
-        throw new Error('Invalid credentials');
+      if (error) {
+        // Fallback to demo mode if Supabase auth fails
+        console.warn('Supabase auth failed, falling back to demo mode:', error.message);
+        
+        // Demo credentials fallback
+        if ((email === 'admin@sentra.com' && password === 'password123') ||
+            (email === 'client@sentra.com' && password === 'password123') ||
+            (email === 'team@sentra.com' && password === 'password123')) {
+          
+          let mockUser: AuthUser;
+          if (email === 'admin@sentra.com') {
+            mockUser = {
+              id: 'admin-user-id',
+              email: 'admin@sentra.com',
+              name: 'Admin User',
+              role: 'Super Admin',
+              permissions: ['all']
+            };
+          } else if (email === 'client@sentra.com') {
+            mockUser = {
+              id: 'client-user-id',
+              email: 'client@sentra.com',
+              name: 'Nik Salwani Bt.Nik Ab Rahman',
+              role: 'Client Admin',
+              clientId: 1,
+              permissions: ['client_dashboard', 'client_profile', 'client_messages']
+            };
+          } else {
+            mockUser = {
+              id: 'team-user-id',
+              email: 'team@sentra.com',
+              name: 'Team Member',
+              role: 'Team',
+              permissions: ['clients', 'calendar', 'chat', 'reports', 'dashboard']
+            };
+          }
+          
+          setUser(mockUser);
+          return { data: { user: mockUser }, error: null };
+        }
+        
+        throw error;
       }
+
+      return { data, error: null };
     } catch (error: any) {
-      console.log('SupabaseProvider: signIn error:', error);
       return { data: null, error: { message: error.message || 'Sign in failed' } };
     } finally {
       setLoading(false);
-      console.log('SupabaseProvider: signIn completed, loading set to false');
     }
   };
 
   const signOut = async () => {
     setLoading(true);
-    console.log('SupabaseProvider: signOut called');
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      localStorage.removeItem('demoUser');
-      setUser(null);
-      console.log('SupabaseProvider: User signed out, set to null');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       return { error: null };
     } catch (error: any) {
       return { error: { message: error.message || 'Sign out failed' } };
@@ -143,11 +156,21 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
   }) => {
     setLoading(true);
     try {
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      // In a real app, you'd store this user data. For this local setup, we just mock success.
-      console.log('Mock signUp successful for:', email, userData);
-      return { data: { user: { id: 'mock-id', email } }, error: null };
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: userData.name,
+            role: userData.role,
+            clientId: userData.clientId,
+            permissions: userData.permissions
+          }
+        }
+      });
+
+      if (error) throw error;
+      return { data, error: null };
     } catch (error: any) {
       return { data: null, error: { message: error.message || 'Sign up failed' } };
     } finally {
@@ -155,18 +178,7 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
     }
   };
 
-  const setDemoUser = (demoUser: AuthUser) => {
-    console.log('SupabaseProvider: setDemoUser called with:', demoUser);
-    localStorage.setItem('demoUser', JSON.stringify(demoUser));
-    setUser(demoUser);
-    setLoading(false);
-    console.log('SupabaseProvider: Demo user set to', demoUser);
-    console.log('SupabaseProvider: isAuthenticated after setDemoUser:', !!demoUser);
-  };
-
   const isAuthenticated = !!user;
-
-  console.log('SupabaseProvider: Current state - User:', user, 'Loading:', loading, 'isAuthenticated:', isAuthenticated);
 
   const value = {
     user,
@@ -174,8 +186,7 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
     isAuthenticated,
     signIn,
     signOut,
-    signUp,
-    setDemoUser
+    signUp
   };
 
   return (

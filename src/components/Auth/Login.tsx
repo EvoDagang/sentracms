@@ -9,69 +9,24 @@ const Login: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const { signIn, setDemoUser } = useSupabase();
+  const { signIn } = useSupabase();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    console.log('Login.tsx: handleSubmit called with email:', email);
 
-    // Define mockUser for demo credentials
-    const mockUser = {
-      id: email === 'client@sentra.com' ? 'client-user-id' : 
-          email === 'team@sentra.com' ? 'team-user-id' : 'admin-user-id',
-      email: email,
-      name: email === 'client@sentra.com' ? 'Nik Salwani Bt.Nik Ab Rahman' : 
-            email === 'team@sentra.com' ? 'Team Member' : 'Admin User',
-      role: email === 'client@sentra.com' ? 'Client Admin' as const : 
-            email === 'team@sentra.com' ? 'Team' as const : 'Super Admin' as const,
-      permissions: email === 'client@sentra.com' ? ['client_dashboard', 'client_profile', 'client_messages'] : ['all'],
-      clientId: email === 'client@sentra.com' ? 1 : undefined
-    };
-
-    // Check for demo credentials first
-    if ((email === 'admin@sentra.com' && password === 'password123') ||
-        (email === 'client@sentra.com' && password === 'password123') ||
-        (email === 'team@sentra.com' && password === 'password123')) {
-      
-      console.log('Login.tsx: Demo credentials detected, setting mock user synchronously');
-      setDemoUser(mockUser); // Directly set the demo user
-      setIsLoading(false); // Reset loading state immediately
-    } else {
-    // Handle non-demo credentials with Supabase (simulated)
     try {
-      console.log('Login.tsx: Attempting signIn with Supabase hook');
       const { data, error: signInError } = await signIn(email, password);
       
       if (signInError) {
-        // If simulated Supabase fails, check if it's a network error and allow demo login fallback
-        if (signInError.message?.includes('fetch') || signInError.message?.includes('network') || signInError.message?.includes('Supabase not configured')) {
-          setError('Unable to connect to authentication server. Using demo mode.');
-          
-          // Fallback to demo mode after a delay for visual feedback
-          // Allow any login in demo mode when Supabase is unavailable
-          setTimeout(() => {
-            console.log('Demo mode login for:', email);
-            setDemoUser(mockUser); // Use mockUser defined above
-            setIsLoading(false); // Reset loading state for fallback demo
-          }, 1000);
-          return; // Exit after scheduling fallback demo
-        }
         throw signInError;
       }
-
-      console.log('Login successful:', data);
     } catch (err: any) {
-      console.error('Login error:', err);
-      setError('Authentication failed. Please try the demo credentials: admin@sentra.com / password123 or client@sentra.com / password123');
+      setError(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
-      // This finally block only applies to the actual signIn call, not the demo path
-      // The demo path handles its own setIsLoading(false)
       setIsLoading(false);
-      console.log('Login.tsx: handleSubmit completed');
     }
-  }
   };
 
   return (
