@@ -111,58 +111,56 @@ export const SupabaseProvider: React.FC<SupabaseProviderProps> = ({ children }) 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
     try {
+      // Check for demo credentials first and handle them directly
+      if ((email === 'admin@sentra.com' && password === 'password123') ||
+          (email === 'client@sentra.com' && password === 'password123') ||
+          (email === 'team@sentra.com' && password === 'password123')) {
+        
+        let mockUser: AuthUser;
+        if (email === 'admin@sentra.com') {
+          mockUser = {
+            id: 'admin-user-id',
+            email: 'admin@sentra.com',
+            name: 'Admin User',
+            role: 'Super Admin',
+            permissions: ['all']
+          };
+        } else if (email === 'client@sentra.com') {
+          mockUser = {
+            id: 'client-user-id',
+            email: 'client@sentra.com',
+            name: 'Nik Salwani Bt.Nik Ab Rahman',
+            role: 'Client Admin',
+            clientId: 1,
+            permissions: ['client_dashboard', 'client_profile', 'client_messages']
+          };
+        } else {
+          mockUser = {
+            id: 'team-user-id',
+            email: 'team@sentra.com',
+            name: 'Team Member',
+            role: 'Team',
+            permissions: ['clients', 'calendar', 'chat', 'reports', 'dashboard']
+          };
+        }
+        
+        setUser(mockUser);
+        return { data: { user: mockUser }, error: null };
+      }
+
+      // For non-demo credentials, try Supabase authentication
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        // Fallback to demo mode if Supabase auth fails
-        console.warn('Supabase auth failed, falling back to demo mode:', error.message);
-        
-        // Demo credentials fallback
-        if ((email === 'admin@sentra.com' && password === 'password123') ||
-            (email === 'client@sentra.com' && password === 'password123') ||
-            (email === 'team@sentra.com' && password === 'password123')) {
-          
-          let mockUser: AuthUser;
-          if (email === 'admin@sentra.com') {
-            mockUser = {
-              id: 'admin-user-id',
-              email: 'admin@sentra.com',
-              name: 'Admin User',
-              role: 'Super Admin',
-              permissions: ['all']
-            };
-          } else if (email === 'client@sentra.com') {
-            mockUser = {
-              id: 'client-user-id',
-              email: 'client@sentra.com',
-              name: 'Nik Salwani Bt.Nik Ab Rahman',
-              role: 'Client Admin',
-              clientId: 1,
-              permissions: ['client_dashboard', 'client_profile', 'client_messages']
-            };
-          } else {
-            mockUser = {
-              id: 'team-user-id',
-              email: 'team@sentra.com',
-              name: 'Team Member',
-              role: 'Team',
-              permissions: ['clients', 'calendar', 'chat', 'reports', 'dashboard']
-            };
-          }
-          
-          setUser(mockUser);
-          return { data: { user: mockUser }, error: null };
-        }
-        
         throw error;
       }
 
       return { data, error: null };
     } catch (error: any) {
-      return { data: null, error: { message: error.message || 'Sign in failed' } };
+      return { data: null, error: { message: error.message || 'Invalid login credentials. Please check your email and password.' } };
     } finally {
       setLoading(false);
     }
