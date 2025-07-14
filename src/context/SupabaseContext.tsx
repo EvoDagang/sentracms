@@ -38,6 +38,9 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.log('[fetchUserProfile] Starting profile fetch for user ID:', userId);
     console.log('[fetchUserProfile] About to execute Supabase query...');
     
+    // NEW LOG: Before query execution
+    console.log('[fetchUserProfile] Before Supabase query execution.');
+
     const startTime = Date.now();
     const { data, error } = await supabase
       .from('user_profiles')
@@ -45,6 +48,9 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
       .eq('id', userId)
       .single();
     
+    // NEW LOG: After query execution, showing data and error
+    console.log('[fetchUserProfile] After Supabase query execution. Data:', data, 'Error:', error);
+
     const endTime = Date.now();
     console.log(`[fetchUserProfile] Supabase query completed in ${endTime - startTime}ms`);
 
