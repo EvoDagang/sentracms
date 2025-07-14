@@ -523,7 +523,7 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto p-4 lg:p-8">
         {/* Top Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-6 lg:mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 lg:gap-6 mb-6 lg:mb-8">
           {/* Progress Tracking */}
           <div 
             className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
@@ -595,6 +595,23 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
             </div>
           </div>
         </div>
+          {/* Add On Service */}
+          <div 
+            className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => setShowAddOnServices(true)}
+          >
+            <div className="text-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Plus className="w-6 h-6 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-slate-900 mb-2">Add On Service</h3>
+              <p className="text-sm text-slate-600 mb-3">Explore additional services</p>
+              <div className="flex items-center justify-center text-blue-600">
+                <Plus className="w-4 h-4 mr-1" />
+                <span className="text-sm font-medium">Browse Services</span>
+              </div>
+            </div>
+          </div>
 
         {/* Bottom Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
@@ -643,15 +660,6 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
               )}
             </div>
             
-            <div className="mt-4">
-              <button
-                onClick={() => setShowAddOnServices(true)}
-                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-3 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add On Service</span>
-              </button>
-            </div>
           </div>
 
           {/* Chat Messages Section */}
