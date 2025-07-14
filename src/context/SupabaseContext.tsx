@@ -32,6 +32,13 @@ interface SupabaseProviderProps {
   children: ReactNode;
 }
 
+// Helper function to create a timeout promise
+const createTimeoutPromise = (ms: number) => {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`Operation timed out after ${ms}ms`)), ms);
+  });
+};
+
 // Helper function to fetch user profile
 const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
   try {
@@ -42,11 +49,19 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.log('[fetchUserProfile] Before Supabase query execution.');
 
     const startTime = Date.now();
-    const { data, error } = await supabase
+    
+    // Add timeout to prevent hanging
+    const queryPromise = supabase
       .from('user_profiles')
       .select('*')
       .eq('id', userId)
       .single();
+    
+    const timeoutPromise = createTimeoutPromise(10000); // 10 second timeout
+    
+    console.log('[fetchUserProfile] Starting query with 10s timeout...');
+    
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
     
     // NEW LOG: After query execution, showing data and error
     console.log('[fetchUserProfile] After Supabase query execution. Data:', data, 'Error:', error);
@@ -85,6 +100,18 @@ const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     console.error('[fetchUserProfile] Catch block error:', error);
     console.error('[fetchUserProfile] Error type:', typeof error);
     console.error('[fetchUserProfile] Error constructor:', error?.constructor?.name);
+    
+    // If it's a timeout error, let's try a simple connection test
+    if (error instanceof Error && error.message.includes('timed out')) {
+      console.log('[fetchUserProfile] Query timed out, testing basic Supabase connection...');
+      try {
+        const testResult = await supabase.from('user_profiles').select('count').limit(1);
+        console.log('[fetchUserProfile] Basic connection test result:', testResult);
+      } catch (testError) {
+        console.error('[fetchUserProfile] Basic connection test failed:', testError);
+      }
+    }
+    
     return null;
   }
 };
