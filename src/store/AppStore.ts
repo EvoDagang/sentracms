@@ -1,6 +1,28 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
+// Utility function to convert snake_case keys to camelCase
+const toCamelCase = (str: string): string => {
+  return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
+};
+
+const convertKeysToCamelCase = (obj: any): any => {
+  if (obj === null || typeof obj !== 'object') {
+    return obj;
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(convertKeysToCamelCase);
+  }
+  
+  const converted: any = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const camelKey = toCamelCase(key);
+    converted[camelKey] = convertKeysToCamelCase(value);
+  }
+  return converted;
+};
+
 interface Client {
   id: number;
   name: string;
@@ -96,12 +118,12 @@ interface CalendarEvent {
 
 interface Chat {
   id: number;
-  clientId: number;
-  client: string;
+  clientId?: number;
+  clientName: string;
   avatar: string;
   lastMessage?: string;
   lastMessageAt?: string;
-  unread_count: number;
+  unreadCount: number;
   online: boolean;
   messages: ChatMessage[];
   createdAt: string;
@@ -148,7 +170,6 @@ interface AppState {
   chats: Chat[];
   tags: Tag[];
   users: User[];
-  unread: number; // Add unread property to Chat interface
 
   // Loading states
   loading: {
@@ -256,8 +277,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        clients: data || [],
+        clients: convertedData,
         loading: { ...state.loading, clients: false }
       }));
     } catch (error) {
@@ -276,8 +299,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        invoices: data || [],
+        invoices: convertedData,
         loading: { ...state.loading, invoices: false }
       }));
     } catch (error) {
@@ -296,8 +321,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        payments: data || [],
+        payments: convertedData,
         loading: { ...state.loading, payments: false }
       }));
     } catch (error) {
@@ -316,8 +343,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        components: data || [],
+        components: convertedData,
         loading: { ...state.loading, components: false }
       }));
     } catch (error) {
@@ -336,8 +365,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        progressSteps: data || [],
+        progressSteps: convertedData,
         loading: { ...state.loading, progressSteps: false }
       }));
     } catch (error) {
@@ -356,8 +387,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        calendarEvents: data || [],
+        calendarEvents: convertedData,
         loading: { ...state.loading, calendarEvents: false }
       }));
     } catch (error) {
@@ -390,14 +423,21 @@ export const useAppStore = create<AppState>((set, get) => ({
             return { ...chat, messages: [] };
           }
           
+          const convertedMessages = convertKeysToCamelCase(messagesData || []);
+          
           return {
-            ...chat,
-            client: chat.client_name,
-            unread: chat.unread_count,
+            id: chat.id,
+            clientId: chat.client_id,
+            clientName: chat.client_name,
+            avatar: chat.avatar || 'U',
+            unreadCount: chat.unread_count || 0,
             online: chat.online,
             lastMessage: chat.last_message,
+            lastMessageAt: chat.last_message_at,
             timestamp: chat.last_message_at ? new Date(chat.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-            messages: messagesData || []
+            messages: convertedMessages,
+            createdAt: chat.created_at,
+            updatedAt: chat.updated_at
           };
         })
       );
@@ -422,8 +462,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        tags: data || [],
+        tags: convertedData,
         loading: { ...state.loading, tags: false }
       }));
     } catch (error) {
@@ -442,8 +484,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data || []);
+      
       set((state) => ({ 
-        users: data || [],
+        users: convertedData,
         loading: { ...state.loading, users: false }
       }));
     } catch (error) {
@@ -480,8 +524,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
-          clients: [...state.clients, data],
+          clients: [...state.clients, convertedData],
         }));
       } catch (error) {
         console.error('Error adding client:', error);
@@ -513,9 +559,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           clients: state.clients.map((client) =>
-            client.id === id ? data : client
+            client.id === id ? convertedData : client
           ),
         }));
       } catch (error) {
@@ -572,9 +620,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         // Update local state
         set((state) => ({
-          invoices: [...state.invoices, data],
+          invoices: [...state.invoices, convertedData],
         }));
         
         // Auto-create tag if it doesn't exist
@@ -631,9 +681,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           invoices: state.invoices.map((invoice) =>
-            invoice.id === id ? data : invoice
+            invoice.id === id ? convertedData : invoice
           ),
         }));
       } catch (error) {
@@ -687,8 +739,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
-          payments: [...state.payments, data],
+          payments: [...state.payments, convertedData],
         }));
       } catch (error) {
         console.error('Error adding payment:', error);
@@ -714,9 +768,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           payments: state.payments.map((payment) =>
-            payment.id === id ? data : payment
+            payment.id === id ? convertedData : payment
           ),
         }));
       } catch (error) {
@@ -767,6 +823,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         // Create corresponding progress step
         await supabase
           .from('progress_steps')
@@ -779,7 +837,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           }]);
         
         set((state) => ({
-          components: [...state.components, data],
+          components: [...state.components, convertedData],
         }));
         
         // Refresh progress steps
@@ -809,6 +867,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data || []);
+        
         // Create corresponding progress steps
         const progressStepsToInsert = componentsData.map(componentData => ({
           client_id: componentData.clientId,
@@ -823,7 +883,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           .insert(progressStepsToInsert);
         
         set((state) => ({
-          components: [...state.components, ...(data || [])],
+          components: [...state.components, ...convertedData],
         }));
         
         // Refresh progress steps
@@ -850,9 +910,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           components: state.components.map((component) =>
-            component.id === id ? data : component
+            component.id === id ? convertedData : component
           ),
         }));
       } catch (error) {
@@ -908,8 +970,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
-          progressSteps: [...state.progressSteps, data],
+          progressSteps: [...state.progressSteps, convertedData],
         }));
       } catch (error) {
         console.error('Error adding progress step:', error);
@@ -938,9 +1002,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           progressSteps: state.progressSteps.map((step) =>
-            step.id === id ? data : step
+            step.id === id ? convertedData : step
           ),
         }));
       } catch (error) {
@@ -994,8 +1060,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
-          calendarEvents: [...state.calendarEvents, data],
+          calendarEvents: [...state.calendarEvents, convertedData],
         }));
       } catch (error) {
         console.error('Error adding calendar event:', error);
@@ -1024,9 +1092,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           calendarEvents: state.calendarEvents.map((event) =>
-            event.id === id ? data : event
+            event.id === id ? convertedData : event
           ),
         }));
       } catch (error) {
@@ -1069,8 +1139,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data);
+      
       set((state) => ({
-        tags: [...state.tags, data],
+        tags: [...state.tags, convertedData],
       }));
     } catch (error) {
       console.error('Error adding tag:', error);
@@ -1092,9 +1164,11 @@ export const useAppStore = create<AppState>((set, get) => ({
       
       if (error) throw error;
       
+      const convertedData = convertKeysToCamelCase(data);
+      
       set((state) => ({
         tags: state.tags.map((tag) =>
-          tag.id === id ? data : tag
+          tag.id === id ? convertedData : tag
         ),
       }));
     } catch (error) {
@@ -1139,8 +1213,10 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
-          users: [...state.users, data],
+          users: [...state.users, convertedData],
         }));
       } catch (error) {
         console.error('Error adding user:', error);
@@ -1168,9 +1244,11 @@ export const useAppStore = create<AppState>((set, get) => ({
         
         if (error) throw error;
         
+        const convertedData = convertKeysToCamelCase(data);
+        
         set((state) => ({
           users: state.users.map((user) =>
-            user.id === id ? data : user
+            user.id === id ? convertedData : user
           ),
         }));
       } catch (error) {

@@ -44,10 +44,10 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onToggleSidebar }) 
   const allMessages = chats.flatMap(chat => 
     chat.messages.map(message => ({
       ...message,
-      client: chat.client,
+      clientName: chat.clientName,
       avatar: chat.avatar,
       chatId: chat.id,
-      isUnread: chat.unread > 0 && message.id === Math.max(...chat.messages.map(m => m.id))
+      isUnread: chat.unreadCount > 0 && message.id === Math.max(...chat.messages.map(m => m.id))
     }))
   ).sort((a, b) => {
     // Simple timestamp sorting - in real app, you'd use proper date comparison
@@ -59,7 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onToggleSidebar }) 
   }).slice(0, 10);
 
   // Calculate total unread messages
-  const totalUnreadMessages = chats.reduce((total, chat) => total + chat.unread, 0);
+  const totalUnreadMessages = chats.reduce((total, chat) => total + chat.unreadCount, 0);
 
   // Monthly sales data - distribute total sales to January for demonstration
   const monthlyData = [

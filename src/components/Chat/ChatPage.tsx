@@ -85,14 +85,14 @@ const ChatPage: React.FC<ChatPageProps> = ({ onToggleSidebar }) => {
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between">
-                        <h3 className="font-medium text-slate-900 truncate text-sm lg:text-base">{chat.client}</h3>
+                        <h3 className="font-medium text-slate-900 truncate text-sm lg:text-base">{chat.clientName}</h3>
                         <span className="text-xs text-slate-500">{chat.timestamp}</span>
                       </div>
                       <p className="text-xs lg:text-sm text-slate-600 truncate">{chat.lastMessage}</p>
                     </div>
-                    {chat.unread > 0 && (
+                    {chat.unreadCount > 0 && (
                       <div className="w-4 h-4 lg:w-5 lg:h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                        <span className="text-xs text-white font-medium">{chat.unread}</span>
+                        <span className="text-xs text-white font-medium">{chat.unreadCount}</span>
                       </div>
                     )}
                   </div>
@@ -110,7 +110,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onToggleSidebar }) => {
                   {activeClient?.avatar}
                 </div>
                 <div>
-                  <h3 className="font-medium text-slate-900">{activeClient?.client}</h3>
+                  <h3 className="font-medium text-slate-900">{activeClient?.clientName}</h3>
                   <p className="text-sm text-slate-500">
                     {activeClient?.online ? 'Online' : 'Last seen 2 hours ago'}
                   </p>
@@ -200,7 +200,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ onToggleSidebar }) => {
                       {activeClient?.avatar}
                     </div>
                     <div>
-                      <h3 className="font-medium text-slate-900 text-sm">{activeClient?.client}</h3>
+                      <h3 className="font-medium text-slate-900 text-sm">{activeClient?.clientName}</h3>
                       <p className="text-xs text-slate-500">
                         {activeClient?.online ? 'Online' : 'Last seen 2 hours ago'}
                       </p>
