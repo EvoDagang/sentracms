@@ -118,9 +118,9 @@ interface CalendarEvent {
 
 interface Chat {
   id: number;
-  clientId?: number;
+  clientId: number;
   clientName: string;
-  avatar: string;
+  avatar?: string;
   lastMessage?: string;
   lastMessageAt?: string;
   unreadCount: number;
