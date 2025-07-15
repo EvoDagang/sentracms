@@ -45,9 +45,9 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onToggleSidebar }) 
     chat.messages.map(message => ({
       ...message,
       clientName: chat.clientName,
-      avatar: chat.avatar,
+      avatar: chat.avatar || 'U',
       chatId: chat.id,
-      isUnread: chat.unreadCount > 0 && message.id === Math.max(...chat.messages.map(m => m.id))
+      isUnread: chat.unreadCount > 0 && message.id === Math.max(...chat.messages.map(m => Number(m.id)))
     }))
   ).sort((a, b) => {
     // Simple timestamp sorting - in real app, you'd use proper date comparison

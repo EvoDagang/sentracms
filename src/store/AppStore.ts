@@ -420,24 +420,17 @@ export const useAppStore = create<AppState>((set, get) => ({
           
           if (messagesError) {
             console.error('Error fetching messages for chat:', chat.id, messagesError);
-            return { ...chat, messages: [] };
+            return convertKeysToCamelCase({ ...chat, messages: [] });
           }
           
           const convertedMessages = convertKeysToCamelCase(messagesData || []);
           
+          const convertedChat = convertKeysToCamelCase(chat);
           return {
-            id: chat.id,
-            clientId: chat.client_id,
-            clientName: chat.client_name,
-            avatar: chat.avatar || 'U',
-            unreadCount: chat.unread_count || 0,
-            online: chat.online,
-            lastMessage: chat.last_message,
-            lastMessageAt: chat.last_message_at,
-            timestamp: chat.last_message_at ? new Date(chat.last_message_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '',
-            messages: convertedMessages,
-            createdAt: chat.created_at,
-            updatedAt: chat.updated_at
+            ...convertedChat,
+            avatar: convertedChat.avatar || 'U',
+            unreadCount: convertedChat.unreadCount || 0,
+            messages: convertedMessages
           };
         })
       );
