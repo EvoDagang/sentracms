@@ -645,12 +645,12 @@ const ClientDashboard: React.FC<ClientDashboardProps> = ({ user, onBack }) => {
                   <div className="flex-1">
                     <p className="text-sm font-medium text-blue-900">Live Chat</p>
                     <p className="text-xs text-blue-700">
-                      {clientChat.unread > 0 ? `${clientChat.unread} new messages` : 'No new messages'}
+                      {clientChat.unreadCount > 0 ? `${clientChat.unreadCount} new messages` : 'No new messages'}
                     </p>
                   </div>
-                  {clientChat.unread > 0 && (
+                  {clientChat.unreadCount > 0 && (
                     <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-xs text-white font-medium">{clientChat.unread}</span>
+                      <span className="text-xs text-white font-medium">{clientChat.unreadCount}</span>
                     </div>
                   )}
                 </div>

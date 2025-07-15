@@ -434,7 +434,7 @@ const Dashboard: React.FC<DashboardProps> = ({ setActiveTab, onToggleSidebar }) 
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1 gap-2">
-                      <h4 className="text-xs lg:text-sm font-semibold text-slate-900 truncate">{message.client}</h4>
+                      <h4 className="text-xs lg:text-sm font-semibold text-slate-900 truncate">{message.clientName}</h4>
                       <div className="flex items-center space-x-1">
                         <Clock className="w-3 h-3 text-slate-400 flex-shrink-0" />
                         <span className="text-xs text-slate-500 whitespace-nowrap">{message.timestamp}</span>
